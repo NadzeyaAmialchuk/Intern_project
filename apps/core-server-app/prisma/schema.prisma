@@ -115,7 +115,6 @@ model Chat {
   id                 String      @id @default(uuid()) @db.Uuid
   name               String?     @db.VarChar(100)
   creator_id         String      @db.Uuid
-  participant_count  Int
   created_at         DateTime    @default(now())
 
   creator            User       @relation("ChatCreator", fields: [creator_id], references: [id])
