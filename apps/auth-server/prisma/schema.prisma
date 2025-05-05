@@ -1,0 +1,187 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String      @id @default(uuid()) @db.Uuid
+  username      String      @unique
+  email         String      @unique
+  password      String?
+  password_salt String?
+  phone         String?
+  avatar_id     String?     @unique @db.Uuid
+  is_verified   Boolean     @default(false)
+  is_admin      Boolean     @default(false)
+  google_id     String?
+  github_id     String?
+  created_at    DateTime    @default(now())
+  updated_at    DateTime    @updatedAt
+
+  avatar        Media?      @relation("UserAvatar", fields: [avatar_id], references: [id])
+  posts         Post[]
+  media         Media[]     @relation("UserMedia")
+  likes         Like[]
+  comments      Comment[]
+  followers     Follow[]    @relation("UserFollowers")
+  followings    Follow[]    @relation("UserFollowings")
+  createdChats  Chat[]      @relation("ChatCreator")
+  chatUsers     ChatUser[]
+  sentMessages  Message[]
+  notifications Notification[] @relation("UserNotifications")
+  notificationsFromSource Notification[] @relation("NotificationSource")
+  notificationsAsReceiver Notification[] @relation("NotificationReceiver")
+  bansReceived  UserBan[]   @relation("BannedUser")
+  bansIssued    UserBan[]   @relation("BanningAdmin")
+  reportsMade   Report[]    @relation("Reporter")
+  reportsReceived Report[]  @relation("ReportedUser")
+  reportsResponsible Report[] @relation("ResponsiveAdmin")
+}
+
+model Post {
+  id         String     @id @default(uuid()) @db.Uuid
+  caption    String?
+  location   String?
+  status     String     @default("active")
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt
+  author_id  String     @db.Uuid
+
+  author      User      @relation(fields: [author_id], references: [id])
+  media       Media[]
+  likes       Like[]
+  comments    Comment[]
+  notifications Notification[] @relation("PostNotifications")
+  reports     Report[]  @relation("ReportedPost")
+}
+
+model Media {
+  id          String    @id @default(uuid()) @db.Uuid
+  post_id     String?   @db.Uuid
+  owner_id    String?   @db.Uuid
+  url         String
+  bucket      String    @default("posts")
+  object_name String
+  type        String
+  size        Int?
+  mime_type   String?
+  purpose     String    @default("post")
+  created_at  DateTime  @default(now())
+
+  post        Post?     @relation(fields: [post_id], references: [id])
+  owner       User?     @relation("UserMedia", fields: [owner_id], references: [id])
+  userAsAvatar User?    @relation("UserAvatar")
+}
+
+model Like {
+  id           String   @id @default(uuid()) @db.Uuid
+  created_at   DateTime @default(now())
+  liker_id     String   @db.Uuid
+  liked_post_id String  @db.Uuid
+
+  liker        User     @relation(fields: [liker_id], references: [id])
+  liked_post   Post     @relation(fields: [liked_post_id], references: [id])
+}
+
+model Comment {
+  id               String   @id @default(uuid()) @db.Uuid
+  text             String
+  created_at       DateTime @default(now())
+  author_id       String   @db.Uuid
+  commented_post_id String @db.Uuid
+
+  author          User     @relation(fields: [author_id], references: [id])
+  commented_post  Post     @relation(fields: [commented_post_id], references: [id])
+}
+
+model Follow {
+  id           String   @id @default(uuid()) @db.Uuid
+  created_at   DateTime @default(now())
+  follower_id  String   @db.Uuid
+  following_id String   @db.Uuid
+
+  follower     User     @relation("UserFollowers", fields: [follower_id], references: [id])
+  following    User     @relation("UserFollowings", fields: [following_id], references: [id])
+}
+
+model Chat {
+  id                 String      @id @default(uuid()) @db.Uuid
+  name               String?
+  creator_id         String      @db.Uuid
+  created_at         DateTime    @default(now())
+
+  creator            User       @relation("ChatCreator", fields: [creator_id], references: [id])
+  participants       ChatUser[]
+  messages           Message[]
+}
+
+model ChatUser {
+  id      String   @id @default(uuid()) @db.Uuid
+  chat_id String   @db.Uuid
+  user_id String   @db.Uuid
+
+  chat    Chat     @relation(fields: [chat_id], references: [id])
+  user    User     @relation(fields: [user_id], references: [id])
+}
+
+model Message {
+  id        String   @id @default(uuid()) @db.Uuid
+  text      String?
+  is_read   Boolean  @default(false)
+  created_at DateTime @default(now())
+  sender_id String   @db.Uuid
+  chat_id   String   @db.Uuid
+
+  sender    User     @relation(fields: [sender_id], references: [id])
+  chat      Chat     @relation(fields: [chat_id], references: [id])
+}
+
+model Notification {
+  id             String     @id @default(uuid()) @db.Uuid
+  type           String
+  created_at     DateTime   @default(now())
+  receiver_id    String     @db.Uuid
+  source_user_id String     @db.Uuid
+  post_id        String?    @db.Uuid
+  user_id        String?    @db.Uuid
+
+  receiver       User       @relation("NotificationReceiver", fields: [receiver_id], references: [id])
+  source_user    User       @relation("NotificationSource", fields: [source_user_id], references: [id])
+  post           Post?      @relation("PostNotifications", fields: [post_id], references: [id])
+  user           User?      @relation("UserNotifications", fields: [user_id], references: [id])
+}
+
+model UserBan {
+  id             String     @id @default(uuid()) @db.Uuid
+  reason         String?
+  banned_at      DateTime   @default(now())
+  expires_at     DateTime?
+  is_active      Boolean    @default(true)
+  banned_user_id String     @db.Uuid
+  banning_admin_id String   @db.Uuid
+
+  banned_user    User       @relation("BannedUser", fields: [banned_user_id], references: [id])
+  banning_admin  User       @relation("BanningAdmin", fields: [banning_admin_id], references: [id])
+}
+
+model Report {
+  id               String     @id @default(uuid()) @db.Uuid
+  type             String
+  status           String     @default("pending")
+  resolved_at      DateTime?
+  created_at       DateTime   @default(now())
+  reporter_id      String     @db.Uuid
+  reported_user_id String?    @db.Uuid
+  reported_post_id String?    @db.Uuid
+  responsive_admin_id String? @db.Uuid
+
+  reporter         User       @relation("Reporter", fields: [reporter_id], references: [id])
+  reported_user    User?      @relation("ReportedUser", fields: [reported_user_id], references: [id])
+  reported_post    Post?      @relation("ReportedPost", fields: [reported_post_id], references: [id])
+  responsive_admin User?      @relation("ResponsiveAdmin", fields: [responsive_admin_id], references: [id])
+}
