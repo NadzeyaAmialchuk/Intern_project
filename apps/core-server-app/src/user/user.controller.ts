@@ -1,10 +1,31 @@
-import { Controller, Get, Body, Param, Request, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Body,
+  Param,
+  UnauthorizedException,
+  Headers,
+} from '@nestjs/common';
 import { UserService } from './user.service';
-import { JwtAuthGuard } from 'src/guards/auth.guard';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
+
+  @Get('me')
+  async findMe(@Headers() headers: Record<string, string>) {
+    const authHeader = headers['authorization'];
+    if (!authHeader) {
+      throw new UnauthorizedException('Authorization header is missing');
+    }
+    const [bearer, token] = authHeader.split(' ');
+    if (bearer !== 'Bearer' || !token) {
+      throw new UnauthorizedException('Invalid authorization format');
+    }
+
+    console.log('token:', token);
+    return this.userService.findMe(token);
+  }
 
   @Get()
   findAll() {
@@ -14,10 +35,5 @@ export class UserController {
   @Get(':username')
   findOne(@Param('username') username: string) {
     return this.userService.findOne(username);
-  }
-  @Get('/findMe')
-  @UseGuards(JwtAuthGuard)
-  findMe(@Param('id') id: string) {
-    return this.userService.findOne(id);
   }
 }

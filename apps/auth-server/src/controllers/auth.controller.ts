@@ -33,8 +33,8 @@ router.get("/userMe", authMiddleware, async (req: any, res: any) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    const { password, password_salt, ...safeUserData } = user;
-    res.json(safeUserData);
+    const { password, password_salt, ...userData } = user;
+    res.json(userData);
   } catch (error) {
     console.error("Profile error:", error);
     res.status(500).json({ error: "Internal server error" });

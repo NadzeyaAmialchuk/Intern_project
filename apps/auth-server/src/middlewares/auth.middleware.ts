@@ -1,19 +1,8 @@
 const { verifyToken } = require('../utils/jwt');
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
+import { DecodedToken } from '../interfaces/decodedToken.interface';
+import { AuthRequest } from '../interfaces/authRequest.interface';
 
-interface DecodedToken {
-  sub: string;
-  email: string;
-  phone?: string;
-}
-
-interface AuthRequest extends Request {
-  user?: {
-    id: string;
-    email: string;
-    phone?: string;
-  };
-}
 
 const authMiddleware = (req: AuthRequest, res: Response, next: NextFunction) => {
  const authHeader = req.headers['authorization'];
@@ -27,7 +16,7 @@ const authMiddleware = (req: AuthRequest, res: Response, next: NextFunction) => 
   }
 
   try {
-    const decoded = verifyToken(token) as DecodedToken;
+  const decoded = verifyToken(token) as DecodedToken;
     
    req.user = {
       id: decoded.sub,

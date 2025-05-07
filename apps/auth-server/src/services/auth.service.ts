@@ -1,14 +1,9 @@
+import { User } from "../interfaces/user.interface";
+
 const bcrypt = require('bcryptjs');
 let jwt = require('../utils/jwt');
 const prisma = require('../config/prisma.config');
 
-interface User {
-  id: string;
-  email: string;
-  password?: string;
-  password_salt?: string;
-  phone?: string;
-}
 
 const register = async (req: any, res: any) => {
   const { username, email, password, phone } = req.body;
