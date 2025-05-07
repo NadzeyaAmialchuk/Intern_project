@@ -2,6 +2,8 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const prisma = require('./config/prisma.config')
+const authController = require('./controllers/auth.controller');
+const { errorHandler } = require('./middlewares/error.middleware');
 
 dotenv.config();
 
@@ -9,6 +11,11 @@ const app = express();
 app.use(express.json());
 
 const PORT = process.env.PORT || 3001;
+
+app.use('/auth', authController);
+
+app.use(errorHandler);
+
 
 prisma.$connect()
   .then(() => {
