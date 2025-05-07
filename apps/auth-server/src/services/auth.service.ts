@@ -44,6 +44,20 @@ const login = async (req: any, res: any) => {
   res.json({ access_token: token });
 };
 
-module.exports = { register, login };
+const getUserMe = async (userId: string) => {
+    return await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        phone: true,
+        is_verified: true,
+        created_at: true
+      }
+    });
+  };
+
+module.exports = { register, login, getUserMe };
 
 export {};
