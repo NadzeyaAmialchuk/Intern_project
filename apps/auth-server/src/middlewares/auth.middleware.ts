@@ -1,11 +1,10 @@
-const { verifyToken } = require('../utils/jwt');
-import { Response, NextFunction } from 'express';
-import { DecodedToken } from '../interfaces/decodedToken.interface';
-import { AuthRequest } from '../interfaces/authRequest.interface';
+import { NextFunction, Response } from "express";
+import { AuthRequest } from "../interfaces/authRequest.interface";
 
+const { verifyAccessToken } = require('../utils/jwt');
 
 const authMiddleware = (req: AuthRequest, res: Response, next: NextFunction) => {
- const authHeader = req.headers['authorization'];
+  const authHeader = req.headers['authorization'];
   if (!authHeader) {
     return res.status(401).json({ error: 'Authorization header missing' });
   }
@@ -16,9 +15,9 @@ const authMiddleware = (req: AuthRequest, res: Response, next: NextFunction) => 
   }
 
   try {
-  const decoded = verifyToken(token) as DecodedToken;
+    const decoded = verifyAccessToken(token);
     
-   req.user = {
+    req.user = {
       id: decoded.sub,
       email: decoded.email,
       phone: decoded.phone
@@ -31,3 +30,4 @@ const authMiddleware = (req: AuthRequest, res: Response, next: NextFunction) => 
 };
 
 module.exports = authMiddleware;
+export {};
