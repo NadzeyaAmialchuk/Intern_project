@@ -19,18 +19,6 @@ router.post(
 );
 
 router.post(
-  "/register",
-  [
-    body("username").notEmpty(),
-    body("email").isEmail(),
-    body("password").isLength({ min: 8 }),
-    body("phone").optional().isMobilePhone("any"),
-    validateRequest,
-  ],
-  authService.register
-);
-
-router.post(
     "/login",
     [body("email").isEmail(), body("password").notEmpty(), validateRequest],
     authService.login
